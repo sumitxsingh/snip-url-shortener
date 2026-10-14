@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Snip - URL shortener with analytics</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#f5f6f3;--card:#fff;--ink:#12161f;--mut:#667085;--line:#e3e5df;--acc:#2f4bff;--accbg:#e8ebff;--ok:#14804a;--bad:#c42b2b;--r:14px;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1218;--card:#171b24;--ink:#eef0f5;--mut:#98a0b3;--line:#262c38;--acc:#7b8dff;--accbg:#232a4d;--ok:#4cc38a;--bad:#ff7b7b}}
+:root[data-theme="dark"]{--bg:#0f1218;--card:#171b24;--ink:#eef0f5;--mut:#98a0b3;--line:#262c38;--acc:#7b8dff;--accbg:#232a4d;--ok:#4cc38a;--bad:#ff7b7b}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.55 "Instrument Sans",system-ui,sans-serif}
+h1,h2,h3{font-family:"Bricolage Grotesque",system-ui,sans-serif;margin:0;letter-spacing:-.02em}
+.wrap{max-width:980px;margin:0 auto;padding:20px 16px 56px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+.logo{font:700 22px "Bricolage Grotesque",sans-serif}.logo i{color:var(--acc);font-style:normal}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 14px;min-height:38px}
+button:hover{border-color:var(--mut)}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.pri{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600}
+h1{font-size:clamp(28px,6vw,44px);line-height:1.08;max-width:15ch;margin-bottom:18px}
+.make{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:10px;display:grid;gap:8px;grid-template-columns:1fr}
+@media(min-width:720px){.make{grid-template-columns:1fr 190px auto}}
+.make input{border:0;background:var(--bg);border-radius:10px;padding:12px 14px;min-height:46px;width:100%}
+.err{color:var(--bad);font-size:13px;min-height:20px;margin:6px 4px 0}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0 28px}
+@media(min-width:720px){.stats{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.stat{padding:2px 4px;border-left:2px solid var(--line);padding-left:12px}
+.stat b{display:block;font:700 26px "Bricolage Grotesque",sans-serif}.stat span{color:var(--mut);font-size:13px}
+.grid{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:860px){.grid{grid-template-columns:340px minmax(0,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.list{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.row{text-align:left;width:100%;display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;border:1px solid transparent;background:none}
+.row.on{background:var(--accbg);border-color:var(--acc)}
+.row .c{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.row small{display:block;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:210px}
+.n{font:700 18px "Bricolage Grotesque",sans-serif;white-space:nowrap}
+.hd{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start}
+.short{color:var(--acc);font-weight:600;word-break:break-all}
+.dest{color:var(--mut);font-size:13px;word-break:break-all}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;border-radius:0;min-height:32px;padding:4px 12px;background:none}.seg .on{background:var(--ink);color:var(--bg)}
+.chart{width:100%;height:auto;display:block;margin:8px 0 4px}
+.cols{display:grid;gap:18px;grid-template-columns:minmax(0,1fr);margin-top:14px}
+@media(min-width:640px){.cols{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.cols h3{font-size:14px;margin-bottom:8px;color:var(--mut);font-weight:500}
+.b{margin-bottom:8px;font-size:13px}.b div{display:flex;justify-content:space-between}.b p{height:6px;border-radius:4px;background:var(--accbg);margin:3px 0 0;overflow:hidden}.b p span{display:block;height:100%;background:var(--acc);border-radius:4px}
+.empty{color:var(--mut);padding:26px 8px;text-align:center}
+.tag{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--accbg);color:var(--acc)}
+.off{opacity:.55}
+.note{color:var(--mut);font-size:12.5px;margin-top:22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div class="logo">snip<i>.</i></div><button id="theme" aria-label="Toggle theme">Theme</button></div>
+  <h1>Shorten a link. See who clicks it.</h1>
+  <div class="make">
+    <input id="url" placeholder="Paste a long URL, like https://example.com/very/long/path" aria-label="Long URL" autocomplete="off">
+    <input id="alias" placeholder="Custom alias (optional)" aria-label="Custom alias" autocomplete="off">
+    <button class="pri" id="go">Shorten link</button>
+  </div>
+  <div class="err" id="err" role="alert"></div>
+  <div class="stats" id="stats"></div>
+  <div class="grid">
+    <div class="card"><h2 style="font-size:18px">Your links</h2><div class="list" id="list"></div></div>
+    <div class="card" id="detail"></div>
+  </div>
+  <p class="note">Your links and click analytics are stored in PostgreSQL. Short links redirect through the server, so every click is recorded.</p>
+</div>
+<script>
+var K="snip_v1",REF=["Direct","Google","Twitter","LinkedIn","WhatsApp","Instagram"],DEV=["Mobile","Desktop","Tablet"],CT=["India","USA","UK","Germany","Canada","Other"],DAY=864e5;
+var links=[],sel=null,range=14;
+function $(s){return document.querySelector(s)}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function load(){try{var r=localStorage.getItem(K);if(r)return JSON.parse(r)}catch(e){}return null}
+function save(){try{localStorage.setItem(K,JSON.stringify(links))}catch(e){}}
+function pick(a,w){var r=Math.random(),s=0,t=0,i;if(w){for(i=0;i<w.length;i++)t+=w[i];r*=t;for(i=0;i<a.length;i++){s+=w[i];if(r<s)return a[i]}}return a[Math.floor(Math.random()*a.length)]}
+function fake(t){return{t:t,ref:pick(REF,[3,5,2,2,3,1]),dev:pick(DEV,[6,3,1]),ct:pick(CT,[5,3,2,1,1,2])}}
+function seed(){var d=[["docs","https://developer.mozilla.org/en-US/docs/Web/JavaScript",90],["portfolio","https://github.com/your-username",55],["launch","https://example.com/blog/our-big-launch-announcement?utm_source=snip",28]],now=Date.now();
+return d.map(function(x,i){var c=[];for(var j=0;j<x[2];j++)c.push(fake(now-Math.pow(Math.random(),1.6)*30*DAY));return{id:"s"+i,code:x[0],url:x[1],created:now-30*DAY,active:true,clicks:c}})}
+function code(){var a="abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789",s="";for(var i=0;i<6;i++)s+=a[Math.floor(Math.random()*a.length)];return s}
+function base(){return location.href.split("#")[0]}
+function shortUrl(c){return base()+"#/"+c}
+function label(c){return "snip/"+c}
+function agent(){var u=navigator.userAgent;return{t:Date.now(),ref:document.referrer?(new URL(document.referrer).hostname.replace("www.","")):"Direct",dev:/iPad|Tablet/.test(u)?"Tablet":/Mobi|Android/.test(u)?"Mobile":"Desktop",ct:"Unknown"}}
+function boot(){links=load();if(!links){links=seed();save()}
+var m=location.hash.match(/^#\/([\w-]{3,30})$/);
+if(m){var l=links.filter(function(x){return x.code===m[1]})[0];
+if(l&&l.active){l.clicks.push(agent());save();location.replace(l.url);return}
+document.body.innerHTML='<div class="wrap"><h1>Link not found</h1><p class="dest">This short link is missing, inactive, or was created in another browser.</p><p><a href="'+esc(base())+'">Back to Snip</a></p></div>';return}
+sel=links.length?links[0].id:null;render()}
+function add(){var u=$("#url").value.trim(),a=$("#alias").value.trim(),e=$("#err");e.textContent="";
+if(!u){e.textContent="Enter a URL to shorten.";return}
+if(!/^https?:\/\//i.test(u))u="https://"+u;
+try{var p=new URL(u);if(p.hostname.indexOf(".")<0)throw 0}catch(x){e.textContent="That doesn't look like a valid URL. Check it and try again.";return}
+if(p.href.indexOf(location.host+location.pathname)>-1&&location.host){e.textContent="You can't shorten a Snip link.";return}
+if(a&&!/^[\w-]{3,30}$/.test(a)){e.textContent="Alias: 3-30 letters, numbers, dashes or underscores.";return}
+var c=a||code();if(links.some(function(x){return x.code===c})){e.textContent="That alias is taken. Try another.";return}
+var l={id:"l"+Date.now(),code:c,url:p.href,created:Date.now(),active:true,clicks:[]};
+links.unshift(l);sel=l.id;save();$("#url").value="";$("#alias").value="";render()}
+function copy(t,b){var done=function(){var o=b.textContent;b.textContent="Copied";setTimeout(function(){b.textContent=o},1200)};
+try{navigator.clipboard.writeText(t).then(done,fb)}catch(e){fb()}
+function fb(){var x=document.createElement("textarea");x.value=t;document.body.appendChild(x);x.select();try{document.execCommand("copy");done()}catch(e){}document.body.removeChild(x)}}
+function count(arr,k){var m={};arr.forEach(function(c){m[c[k]]=(m[c[k]]||0)+1});return Object.keys(m).map(function(n){return[n,m[n]]}).sort(function(a,b){return b[1]-a[1]}).slice(0,5)}
+function bars(t,arr,k){var d=count(arr,k),mx=d.length?d[0][1]:1;
+return'<div><h3>'+t+'</h3>'+(d.length?d.map(function(x){return'<div class="b"><div><span>'+esc(x[0])+'</span><b>'+x[1]+'</b></div><p><span style="width:'+Math.round(x[1]/mx*100)+'%"></span></p></div>'}).join(""):'<span class="dest">No data yet</span>')+'</div>'}
+function chart(cl){var W=600,H=150,P=6,now=new Date();now.setHours(23,59,59,999);var end=now.getTime(),v=[],i;
+for(i=0;i<range;i++)v.push(0);
+cl.forEach(function(c){var d=range-1-Math.floor((end-c.t)/DAY);if(d>=0&&d<range)v[d]++});
+var mx=Math.max.apply(null,v.concat([1])),pts=v.map(function(y,i){return[P+i*(W-2*P)/(range-1),H-P-(y/mx)*(H-2*P-10)]}),
+ln=pts.map(function(p,i){return(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)}).join(" "),
+f=function(o){return new Date(end-o*DAY).toLocaleDateString(undefined,{day:"numeric",month:"short"})};
+return'<svg class="chart" viewBox="0 0 '+W+' '+(H+18)+'" role="img" aria-label="Clicks per day, peak '+mx+'"><path d="'+ln+' L'+pts[pts.length-1][0]+' '+(H-P)+' L'+pts[0][0]+' '+(H-P)+'Z" fill="var(--accbg)"/><path d="'+ln+'" fill="none" stroke="var(--acc)" stroke-width="2.5" stroke-linejoin="round"/><text x="'+P+'" y="'+(H+14)+'" fill="var(--mut)" font-size="12">'+f(range-1)+'</text><text x="'+(W-P)+'" y="'+(H+14)+'" text-anchor="end" fill="var(--mut)" font-size="12">Today (peak '+mx+'/day)</text></svg>'}
+function render(){var tot=0,td=0,top=null,st=Date.now()-DAY;
+links.forEach(function(l){tot+=l.clicks.length;l.clicks.forEach(function(c){if(c.t>st)td++});if(!top||l.clicks.length>top.clicks.length)top=l});
+function s(n,t){return'<div class="stat"><b>'+n+'</b><span>'+t+'</span></div>'}
+$("#stats").innerHTML=s(links.length,"Links")+s(tot,"Total clicks")+s(td,"Last 24 hours")+s(top?esc(top.code):"-","Top link");
+$("#list").innerHTML=links.length?links.map(function(l){return'<button class="row'+(l.id===sel?" on":"")+(l.active?"":" off")+'" data-id="'+l.id+'"><span style="min-width:0"><span class="c">'+esc(label(l.code))+'</span><small>'+esc(l.url)+'</small></span><span class="n">'+l.clicks.length+'</span></button>'}).join(""):'<div class="empty">Paste a URL above to create your first short link.</div>';
+var l=links.filter(function(x){return x.id===sel})[0];
+if(!l){$("#detail").innerHTML='<div class="empty">Select a link to see its analytics.</div>';return}
+var cl=l.clicks.filter(function(c){return c.t>Date.now()-range*DAY}),uniq=Math.max(1,Math.round(cl.length*.72));
+$("#detail").innerHTML='<div class="hd"><div style="min-width:0"><h2 style="font-size:22px">'+esc(label(l.code))+(l.active?"":' <span class="tag">Paused</span>')+'</h2><div class="short">'+esc(shortUrl(l.code))+'</div><div class="dest">'+esc(l.url)+'</div></div><div class="seg" role="group" aria-label="Date range"><button data-r="7" class="'+(range==7?"on":"")+'">7d</button><button data-r="14" class="'+(range==14?"on":"")+'">14d</button><button data-r="30" class="'+(range==30?"on":"")+'">30d</button></div></div>'+
+'<div class="acts"><button data-a="copy">Copy link</button><a href="'+esc(shortUrl(l.code))+'" target="_blank" rel="noopener"><button tabindex="-1">Open short link</button></a><button data-a="sim">Add test click</button><button data-a="pause">'+(l.active?"Pause":"Resume")+'</button><button data-a="del" style="color:var(--bad)">Delete</button></div>'+
+'<div class="stats" style="margin:6px 0 0;grid-template-columns:repeat(2,minmax(0,1fr))">'+s(cl.length,"Clicks, last "+range+" days")+s(uniq,"Est. unique visitors")+'</div>'+chart(cl)+
+'<div class="cols">'+bars("Referrers",cl,"ref")+bars("Devices",cl,"dev")+bars("Countries",cl,"ct")+'</div>'}
+document.addEventListener("click",function(e){var t=e.target.closest("button");if(!t)return;
+if(t.id==="go"){add();return}
+if(t.id==="theme"){var r=document.documentElement,d=r.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");r.setAttribute("data-theme",d==="dark"?"light":"dark");return}
+if(t.dataset.id){sel=t.dataset.id;render();return}
+if(t.dataset.r){range=+t.dataset.r;render();return}
+var l=links.filter(function(x){return x.id===sel})[0];if(!l)return;
+var a=t.dataset.a;
+if(a==="copy")copy(shortUrl(l.code),t);
+if(a==="sim"){l.clicks.push(fake(Date.now()));save();render()}
+if(a==="pause"){l.active=!l.active;save();render()}
+if(a==="del"&&confirm("Delete "+label(l.code)+" and its click data?")){links=links.filter(function(x){return x!==l});sel=links.length?links[0].id:null;save();render()}});
+$("#url").addEventListener("keydown",function(e){if(e.key==="Enter")add()});
+$("#alias").addEventListener("keydown",function(e){if(e.key==="Enter")add()});
+window.addEventListener("hashchange",function(){if(/^#\/[\w-]{3,30}$/.test(location.hash))location.reload()});
+</script>
+<script>
+var TK="snip_token";
+function tok(){try{return localStorage.getItem(TK)}catch(e){return null}}
+function api(p,o){o=o||{};o.headers=Object.assign({"Content-Type":"application/json"},o.headers||{});var t=tok();if(t)o.headers.Authorization="Bearer "+t;if(o.body&&typeof o.body!=="string")o.body=JSON.stringify(o.body);
+return fetch("/api"+p,o).then(function(r){return r.json().catch(function(){return{}}).then(function(d){if(!r.ok){if(r.status===401&&p.indexOf("/auth")<0)logout();throw new Error(d.error||"Request failed")}return d})})}
+function base(){return location.origin+"/"}
+function shortUrl(c){return location.origin+"/"+c}
+function label(c){return location.host+"/"+c}
+function save(){}
+function parts(on){document.querySelectorAll(".make,.stats,.grid").forEach(function(n){n.style.display=on?"":"none"})}
+function hideAuth(keep){var a=$("#auth");if(a)a.remove();if(!keep){parts(true);if(!$("#lo")){var b=document.createElement("button");b.id="lo";b.textContent="Log out";$(".top").appendChild(b)}}}
+function showAuth(){hideAuth(true);parts(false);var s='border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px;min-height:44px;width:100%',d=document.createElement("div");
+d.id="auth";d.className="card";d.style.cssText="max-width:380px;display:grid;gap:8px;margin-bottom:24px";
+d.innerHTML='<h2 style="font-size:20px">Sign in to Snip</h2><input id="em" type="email" placeholder="you@example.com" aria-label="Email" autocomplete="email" style="'+s+'"><input id="pw" type="password" placeholder="Password, 8+ characters" aria-label="Password" autocomplete="current-password" style="'+s+'"><div style="display:flex;gap:8px"><button class="pri" data-auth="login">Log in</button><button data-auth="register">Create account</button></div>';
+$(".err").after(d);var lo=$("#lo");if(lo)lo.remove()}
+function logout(){try{localStorage.removeItem(TK)}catch(e){}links=[];sel=null;showAuth()}
+function refresh(){return api("/links").then(function(d){links=d.map(function(l){l.id=String(l.id);l.created=new Date(l.created_at).getTime();return l});if(!links.some(function(x){return x.id===sel}))sel=links.length?links[0].id:null;render()}).catch(function(e){$("#err").textContent=e.message})}
+function boot(){if(!tok()){showAuth();return}hideAuth();refresh()}
+function add(){var u=$("#url").value.trim(),a=$("#alias").value.trim(),e=$("#err");e.textContent="";if(!u){e.textContent="Enter a URL to shorten.";return}
+api("/links",{method:"POST",body:{url:u,alias:a}}).then(function(l){$("#url").value="";$("#alias").value="";sel=String(l.id);return refresh()}).catch(function(x){e.textContent=x.message})}
+document.addEventListener("click",function(e){var t=e.target.closest("button");if(!t||(t.dataset.a!=="pause"&&t.dataset.a!=="del"))return;e.stopImmediatePropagation();
+var l=links.filter(function(x){return x.id===sel})[0];if(!l)return;
+if(t.dataset.a==="pause")api("/links/"+l.id,{method:"PATCH",body:{active:!l.active}}).then(refresh).catch(function(x){$("#err").textContent=x.message});
+else if(confirm("Delete "+label(l.code)+" and its click data?"))api("/links/"+l.id,{method:"DELETE"}).then(refresh).catch(function(x){$("#err").textContent=x.message})},true);
+document.addEventListener("click",function(e){var t=e.target.closest("[data-auth],#lo");if(!t)return;if(t.id==="lo"){logout();return}
+api("/auth/"+t.dataset.auth,{method:"POST",body:{email:$("#em").value,password:$("#pw").value}}).then(function(d){try{localStorage.setItem(TK,d.token)}catch(x){}$("#err").textContent="";boot()}).catch(function(x){$("#err").textContent=x.message})});
+document.head.insertAdjacentHTML("beforeend","<style>[data-a=sim]{display:none}</style>");
+boot();
+</script>
+
+</body>
+</html>
